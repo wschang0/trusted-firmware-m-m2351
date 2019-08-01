@@ -424,10 +424,7 @@ void test_app(void *argument)
      * represent simpler and more common test cases which would make more sense
      * to be run first. Therefore if this dependency is removed the execution
      * order of these test classes should be reversed. */
-
-//WS_REMOVE:    tfm_secure_client_run_tests();
-
-
+    tfm_secure_client_run_tests();
 #endif
 #ifdef TEST_FRAMEWORK_NS
     tfm_non_secure_client_run_tests();
