@@ -206,6 +206,22 @@ static psa_status_t test_memory_permissions(
 static psa_status_t test_peripheral_access(void)
 {
 #ifdef TFM_ENABLE_PERIPH_ACCESS_TEST
+# ifdef M2351
+    uint32_t leds;
+    uint32_t invleds;
+    
+    PA_NS->MODE = (PA_NS->MODE & (~(0x3 << 2*10))) | (GPIO_MODE_OUTPUT << 2*10);
+    
+    leds = PA10_NS;
+    PA10_NS = ~PA10_NS;
+    invleds = PA10_NS;
+    
+    if ((invleds & 1) != (~leds & 1)) {
+        /* Code failed to invert value in peripheral reg */
+        return CORE_TEST_ERRNO_PERIPHERAL_ACCESS_FAILED;
+    }
+# else    
+
     uint32_t leds;
     uint32_t invleds;
     uint32_t userled_mask;
@@ -215,11 +231,11 @@ static psa_status_t test_peripheral_access(void)
     invleds = tfm_plat_test_get_led_status();
     userled_mask = tfm_plat_test_get_userled_mask();
 
-    if ((invleds & userled_mask) != (~leds & userled_mask)) {
+    if ((invleds & MPS2_USERLED_MASK) != (~leds & MPS2_USERLED_MASK)) {
         /* Code failed to invert value in peripheral reg */
         return CORE_TEST_ERRNO_PERIPHERAL_ACCESS_FAILED;
     }
-
+# endif    
     return CORE_TEST_ERRNO_SUCCESS;
 #else
     return CORE_TEST_ERRNO_TEST_NOT_SUPPORTED;
