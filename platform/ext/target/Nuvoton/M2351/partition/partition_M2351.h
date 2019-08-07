@@ -271,7 +271,7 @@ __STATIC_INLINE void SCU_Setup(void)
     SCU->IONSSET = SCU_INIT_IONSSET_VAL;
 
     /* Set Non-secure SRAM */
-    for(i = 11; i >= SCU_SECURE_SRAM_SIZE / 8192; i--)
+    for(i = 11; i >= S_DATA_SIZE / 8192; i--)
     {
         SCU->SRAMNSSET |= (1U << i);
     }
