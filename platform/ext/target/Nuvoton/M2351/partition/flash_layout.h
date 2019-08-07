@@ -47,7 +47,7 @@
  * sw binary. Each FLASH_AREA_IMAGE contains two partitions. See Flash layout
  * above.
  */
-#define FLASH_PARTITION_SIZE            (0x60000)    /* 256+128 kB */
+#define FLASH_PARTITION_SIZE            (0x40000)    /* 256 kB */
 
 /* Sector size of the flash hardware; same as FLASH0_SECTOR_SIZE */
 #define FLASH_AREA_IMAGE_SECTOR_SIZE    (0x800)     /* 2 kB */
@@ -62,7 +62,7 @@
  * is used as a temporary storage during image swapping.
  */
 #define FLASH_AREA_BL2_OFFSET           (0x0)
-#define FLASH_AREA_BL2_SIZE             (FLASH_PARTITION_SIZE)
+#define FLASH_AREA_BL2_SIZE             (0xC000)
 
 #define FLASH_AREA_IMAGE_0_OFFSET       (0x00C000)
 #define FLASH_AREA_IMAGE_0_SIZE         (FLASH_PARTITION_SIZE)
@@ -70,29 +70,28 @@
 #define FLASH_AREA_IMAGE_1_OFFSET       (0x00C000)
 #define FLASH_AREA_IMAGE_1_SIZE         (0x00c000)
 
-#define FLASH_AREA_IMAGE_SCRATCH_OFFSET (0x58000)
-#define FLASH_AREA_IMAGE_SCRATCH_SIZE    0x2000   //(2 * FLASH_PARTITION_SIZE)
+#define FLASH_AREA_IMAGE_SCRATCH_OFFSET (0x100000)
+#define FLASH_AREA_IMAGE_SCRATCH_SIZE    0x800
 
 /* Maximum number of status entries supported by the bootloader. */
-#define BOOT_STATUS_MAX_ENTRIES         ((2 * FLASH_PARTITION_SIZE) / \
-                                         FLASH_AREA_IMAGE_SCRATCH_SIZE)
-
+#define BOOT_STATUS_MAX_ENTRIES         (1)
+                                        
 /** Maximum number of image sectors supported by the bootloader. */
-#define BOOT_MAX_IMG_SECTORS            ((2 * FLASH_PARTITION_SIZE) / \
-                                         FLASH_AREA_IMAGE_SECTOR_SIZE)
+#define BOOT_MAX_IMG_SECTORS            (32)
+                                        
 
-#define FLASH_SST_AREA_OFFSET           (0x3C000)
-#define FLASH_SST_AREA_SIZE             (0x4000)   /* 20 KB */
+#define FLASH_SST_AREA_OFFSET           (0x2C000+FLASH_AREA_IMAGE_0_OFFSET)
+#define FLASH_SST_AREA_SIZE             (0x4000)   /* 16 KB */
 
-#define FLASH_NV_COUNTERS_AREA_OFFSET   (0x36000)
-#define FLASH_NV_COUNTERS_AREA_SIZE     (0x10)     /* 16 Bytes */
+#define FLASH_NV_COUNTERS_AREA_OFFSET   (0x30000+FLASH_AREA_IMAGE_0_OFFSET)
+#define FLASH_NV_COUNTERS_AREA_SIZE     (0x10)     /* 2KB */
 
 /* Offset and size definition in flash area, used by assemble.py */
-#define SECURE_IMAGE_OFFSET             0x0
-#define SECURE_IMAGE_MAX_SIZE           0x60000
+#define SECURE_IMAGE_OFFSET             0xC000
+#define SECURE_IMAGE_MAX_SIZE           0x34000
 
-#define NON_SECURE_IMAGE_OFFSET         0x60000
-#define NON_SECURE_IMAGE_MAX_SIZE       0x20000
+#define NON_SECURE_IMAGE_OFFSET         0x40000
+#define NON_SECURE_IMAGE_MAX_SIZE       0x40000
 
 /* Flash device name used by BL2 and SST
  * Name is defined in flash driver file: Driver_Flash.c
