@@ -260,7 +260,7 @@ LR_NS_PARTITION NS_PARTITION_START {
      * No code will be placed here, just address of this region is used in the
      * secure code to configure certain HW components.
      */
-    ER_NS_PARTITION NS_PARTITION_START EMPTY NS_PARTITION_SIZE {
+    ER_NS_PARTITION NS_PARTITION_START EMPTY /*NS_PARTITION_SIZE*/ 0 {
     }
 }
 
