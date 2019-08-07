@@ -245,7 +245,7 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
         eFlag = 1;
     }else if(inst == 0xBEAB)
     {
-        printf("  Execute BKPT without ICE connected"LF);
+        printf("  [0x%08x] 0x%04x Execute BKPT without ICE connected"LF, addr, inst);
         eFlag = 2;
     }    
     else if((inst >> 12) == 5)
@@ -328,7 +328,7 @@ uint32_t ProcessHardFault(uint32_t lr, uint32_t msp, uint32_t psp)
     else
     {
         eFlag = 4;
-        printf("  Unexpected instruction: 0x%04x "LF, inst);
+        printf("  [0x%08x] 0x%04x Unexpected instruction"LF, addr, inst);
     }
     
     if(eFlag == 3)
