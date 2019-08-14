@@ -64,8 +64,8 @@ void tfm_spm_hal_configure_default_isolation(
 #endif
 REGION_DECLARE(Image$$, TFM_UNPRIV_CODE, $$RO$$Base);
 REGION_DECLARE(Image$$, TFM_UNPRIV_CODE, $$RO$$Limit);
-REGION_DECLARE(Image$$, TFM_UNPRIV_RO_DATA, $$RW$$Base);
-REGION_DECLARE(Image$$, TFM_UNPRIV_RO_DATA, $$ZI$$Limit);
+REGION_DECLARE(Image$$, TFM_UNPRIV_DATA, $$RW$$Base);
+REGION_DECLARE(Image$$, TFM_UNPRIV_DATA, $$ZI$$Limit);
 #ifndef TFM_PSA_API
 REGION_DECLARE(Image$$, TFM_UNPRIV_SCRATCH, $$ZI$$Base);
 REGION_DECLARE(Image$$, TFM_UNPRIV_SCRATCH, $$ZI$$Limit);

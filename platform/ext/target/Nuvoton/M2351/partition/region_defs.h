@@ -25,14 +25,22 @@
 #define BL2_HEAP_SIZE           0x0001000
 #define BL2_MSP_STACK_SIZE      0x0001000
 
-#define S_HEAP_SIZE             0x0001000
+#define S_HEAP_SIZE             0x0000200
 #define S_MSP_STACK_SIZE_INIT   0x0000400
 #define S_MSP_STACK_SIZE        0x0000800
-#define S_PSP_STACK_SIZE        0x0000800
+#define S_PSP_STACK_SIZE        0x0000400
 
-#define NS_HEAP_SIZE            0x0001000
+#define NS_HEAP_SIZE            0x0000000
 #define NS_MSP_STACK_SIZE       0x0000400
-#define NS_PSP_STACK_SIZE       0x0000C00
+#define NS_PSP_STACK_SIZE       0x0000A00
+
+
+/*
+ * This size of buffer is big enough to store an attestation
+ * token produced by initial attestation service
+ */
+#define PSA_INITIAL_ATTEST_TOKEN_MAX_SIZE   0x200
+
 
 /*
  * MPC granularity is 128 KB on AN519 MPS2 FPGA image. Alignment
@@ -48,13 +56,13 @@
 #define  S_IMAGE_SECONDARY_PARTITION_OFFSET (FLASH_AREA_IMAGE_0_OFFSET)
 #endif /* !LINK_TO_SECONDARY_PARTITION */
 #else
-#define  S_IMAGE_PRIMARY_PARTITION_OFFSET (0x0)
+#define  S_IMAGE_PRIMARY_PARTITION_OFFSET (0x4000)
 #endif /* BL2 */
 
 #ifndef LINK_TO_SECONDARY_PARTITION
-#define NS_IMAGE_PRIMARY_PARTITION_OFFSET (0x050000)
+#define NS_IMAGE_PRIMARY_PARTITION_OFFSET (FLASH_PARTITION_SIZE)
 #else
-#define NS_IMAGE_PRIMARY_PARTITION_OFFSET (0x050000)
+#define NS_IMAGE_PRIMARY_PARTITION_OFFSET (FLASH_PARTITION_SIZE)
 #endif /* !LINK_TO_SECONDARY_PARTITION */
 
 /*
@@ -73,14 +81,13 @@
 #else
 /* No header if no bootloader, but keep IMAGE_CODE_SIZE the same */
 #define BL2_HEADER_SIZE      (0x0)
-//#define BL2_TRAILER_SIZE     (0x10400)
-#define BL2_TRAILER_SIZE     (0x00000) //For M2351
+#define BL2_TRAILER_SIZE     (0x00000)
 #endif /* BL2 */
 
 #define IMAGE_CODE_SIZE \
             (FLASH_PARTITION_SIZE - BL2_HEADER_SIZE - BL2_TRAILER_SIZE)
 
-#define CMSE_VENEER_REGION_SIZE     (0x00000400)
+#define CMSE_VENEER_REGION_SIZE     (0x00000800)
 
 /* Use SRAM1 memory to store Code data */
 #define S_ROM_ALIAS_BASE  (0x00000000)
@@ -97,16 +104,16 @@
 #define  S_IMAGE_PRIMARY_AREA_OFFSET \
              (S_IMAGE_PRIMARY_PARTITION_OFFSET + BL2_HEADER_SIZE)
 #define S_CODE_START    (S_ROM_ALIAS(S_IMAGE_PRIMARY_AREA_OFFSET))
-#define S_CODE_SIZE     (IMAGE_CODE_SIZE - CMSE_VENEER_REGION_SIZE)
+#define S_CODE_SIZE     (IMAGE_CODE_SIZE - CMSE_VENEER_REGION_SIZE - S_IMAGE_PRIMARY_AREA_OFFSET)
 #define S_CODE_LIMIT    (S_CODE_START + S_CODE_SIZE - 1)
 
 #define S_DATA_START    (S_RAM_ALIAS(0x0))
-#define S_DATA_SIZE     (64 * 1024)
+#define S_DATA_SIZE     (72 * 1024)
 #define S_DATA_LIMIT    (S_DATA_START + S_DATA_SIZE - 1)
 
 /* CMSE Veneers region */
-//#define CMSE_VENEER_REGION_START  (S_CODE_LIMIT + 1)
-#define CMSE_VENEER_REGION_START  (S_CODE_SIZE) // For M2351
+#define CMSE_VENEER_REGION_START  (S_CODE_LIMIT + 1)
+
 
 /* Non-secure regions */
 #define NS_IMAGE_PRIMARY_AREA_OFFSET \
@@ -123,7 +130,7 @@
 #define NS_PARTITION_START \
             (NS_ROM_ALIAS(NS_IMAGE_PRIMARY_PARTITION_OFFSET))
 
-#define NS_PARTITION_SIZE (FLASH_PARTITION_SIZE)
+#define NS_PARTITION_SIZE (FLASH_TOTAL_SIZE - FLASH_PARTITION_SIZE)
 
 /* Secondary partition for new images in case of firmware upgrade */
 #define SECONDARY_PARTITION_START \
