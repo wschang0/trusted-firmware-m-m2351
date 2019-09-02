@@ -103,7 +103,7 @@
         <bEvRecOn>1</bEvRecOn>
         <bSchkAxf>0</bSchkAxf>
         <bTchkAxf>0</bTchkAxf>
-        <nTsel>8</nTsel>
+        <nTsel>7</nTsel>
         <sDll></sDll>
         <sDllPa></sDllPa>
         <sDlgDll></sDlgDll>
@@ -152,34 +152,34 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>1</LineNumber>
+          <LineNumber>184</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>0</Address>
+          <Address>6652</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>D:\MCU\TF-M\trusted-firmware-m\build_m2351\Keil\debug.ini</Filename>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>D:\MCU\TF-M\trusted-firmware-m\secure_fw\core\tfm_core.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\tfm_s\D:/MCU/TF-M/trusted-firmware-m/secure_fw/core/tfm_core.c\184</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>1</LineNumber>
+          <LineNumber>114</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>0</Address>
+          <Address>268741224</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>D:\MCU\TF-M\trusted-firmware-m\build_m2351\Keil\nosecure_code.ini</Filename>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>D:\MCU\TF-M\trusted-firmware-m\app\main_ns.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression></Expression>
+          <Expression>\\tfm_ns\D:/MCU/TF-M/trusted-firmware-m/app/main_ns.c\114</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
