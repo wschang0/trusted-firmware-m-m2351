@@ -28,11 +28,11 @@
 #define S_HEAP_SIZE             0x0000200
 #define S_MSP_STACK_SIZE_INIT   0x0000400
 #define S_MSP_STACK_SIZE        0x0000800
-#define S_PSP_STACK_SIZE        0x0000400
+#define S_PSP_STACK_SIZE        0x0000800
 
 #define NS_HEAP_SIZE            0x0000000
 #define NS_MSP_STACK_SIZE       0x0000400
-#define NS_PSP_STACK_SIZE       0x0000A00
+#define NS_PSP_STACK_SIZE       0x0000C00
 
 
 /*
@@ -56,7 +56,7 @@
 #define  S_IMAGE_SECONDARY_PARTITION_OFFSET (FLASH_AREA_IMAGE_0_OFFSET)
 #endif /* !LINK_TO_SECONDARY_PARTITION */
 #else
-#define  S_IMAGE_PRIMARY_PARTITION_OFFSET (0x4000)
+#define  S_IMAGE_PRIMARY_PARTITION_OFFSET (0x0000)
 #endif /* BL2 */
 
 #ifndef LINK_TO_SECONDARY_PARTITION
@@ -108,7 +108,7 @@
 #define S_CODE_LIMIT    (S_CODE_START + S_CODE_SIZE - 1)
 
 #define S_DATA_START    (S_RAM_ALIAS(0x0))
-#define S_DATA_SIZE     (72 * 1024)
+#define S_DATA_SIZE     (72 * 1024)//(80 * 1024)
 #define S_DATA_LIMIT    (S_DATA_START + S_DATA_SIZE - 1)
 
 /* CMSE Veneers region */
