@@ -27,12 +27,12 @@
 
 #define S_HEAP_SIZE             0x0000200
 #define S_MSP_STACK_SIZE_INIT   0x0000400
-#define S_MSP_STACK_SIZE        0x0000800
-#define S_PSP_STACK_SIZE        0x0000800
+#define S_MSP_STACK_SIZE        0x0000400
+#define S_PSP_STACK_SIZE        0x0000400
 
 #define NS_HEAP_SIZE            0x0000000
 #define NS_MSP_STACK_SIZE       0x0000400
-#define NS_PSP_STACK_SIZE       0x0000C00
+#define NS_PSP_STACK_SIZE       0x0000400
 
 
 /*
