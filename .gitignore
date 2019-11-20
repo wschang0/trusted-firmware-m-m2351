@@ -6,8 +6,11 @@
 .pydevproject
 .settings/
 
+
 # Visual Studio Code
 .vscode/
+.vs/
+
 
 # Garbage files
 build*/
@@ -15,3 +18,5 @@ build*/
 **/__pycache__
 *.pyc
 !build_m2351
+*.scvd
+*.WSChang0
