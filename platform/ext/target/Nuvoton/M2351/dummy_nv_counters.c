@@ -63,11 +63,15 @@ enum tfm_plat_err_t tfm_plat_init_nv_counter(void)
     uint32_t nbr_counters = ((TFM_NV_COUNTERS_AREA_SIZE - INIT_VALUE_SIZE)
                              / NV_COUNTER_SIZE);
     uint32_t *p_nv_counter;
-    uint8_t sector_data[TFM_NV_COUNTERS_SECTOR_SIZE] = {0};
+    //uint8_t sector_data[TFM_NV_COUNTERS_SECTOR_SIZE] = {0};
+    uint8_t sector_data[FLASH_NV_COUNTERS_AREA_SIZE] = { 0 };
+
+    
 
     /* Read the whole sector to be able to erase and write later in the flash */
-    err = FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data,
-                                  TFM_NV_COUNTERS_SECTOR_SIZE);
+    //err = FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data,TFM_NV_COUNTERS_SECTOR_SIZE);
+    err = FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, FLASH_NV_COUNTERS_AREA_SIZE);
+
     if (err != ARM_DRIVER_OK) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
@@ -96,8 +100,8 @@ enum tfm_plat_err_t tfm_plat_init_nv_counter(void)
     }
 
     /* Write in flash the in-memory block content after modification */
-    err = FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data,
-                                     TFM_NV_COUNTERS_SECTOR_SIZE);
+    //err = FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, TFM_NV_COUNTERS_SECTOR_SIZE);
+    err = FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, FLASH_NV_COUNTERS_AREA_SIZE);
     if (err != ARM_DRIVER_OK) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
@@ -130,18 +134,18 @@ enum tfm_plat_err_t tfm_plat_set_nv_counter(enum tfm_nv_counter_t counter_id,
 {
     int32_t  err;
     uint32_t *p_nv_counter;
-    uint8_t  sector_data[TFM_NV_COUNTERS_SECTOR_SIZE];
+    //uint8_t  sector_data[TFM_NV_COUNTERS_SECTOR_SIZE];
+    uint8_t  sector_data[FLASH_NV_COUNTERS_AREA_SIZE];
 
     /* Read the whole sector to be able to erase and write later in the flash */
-    err = FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data,
-                                  TFM_NV_COUNTERS_SECTOR_SIZE);
+    //err = FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, TFM_NV_COUNTERS_SECTOR_SIZE);
+    err = FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, FLASH_NV_COUNTERS_AREA_SIZE);
     if (err != ARM_DRIVER_OK) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
 
     /* Set the pointer to nv counter position */
-    p_nv_counter = (uint32_t *)(sector_data + NV_COUNTERS_AREA_OFFSET +
-                                (counter_id * NV_COUNTER_SIZE));
+    p_nv_counter = (uint32_t *)(sector_data + NV_COUNTERS_AREA_OFFSET +  (counter_id * NV_COUNTER_SIZE));
 
     if (value != *p_nv_counter) {
 
@@ -158,9 +162,8 @@ enum tfm_plat_err_t tfm_plat_set_nv_counter(enum tfm_nv_counter_t counter_id,
         }
 
         /* Write in flash the in-memory block content after modification */
-        err = FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_SECTOR_ADDR,
-                                         sector_data,
-                                         TFM_NV_COUNTERS_SECTOR_SIZE);
+        //err = FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, TFM_NV_COUNTERS_SECTOR_SIZE);
+        err = FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, FLASH_NV_COUNTERS_AREA_SIZE);
         if (err != ARM_DRIVER_OK) {
             return TFM_PLAT_ERR_SYSTEM_ERR;
         }

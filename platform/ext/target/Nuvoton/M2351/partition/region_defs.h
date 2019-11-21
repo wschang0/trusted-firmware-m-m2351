@@ -22,17 +22,17 @@
 #define TOTAL_ROM_SIZE FLASH_TOTAL_SIZE
 #define TOTAL_RAM_SIZE (0x00018000)     /* 96KB */
 
-#define BL2_HEAP_SIZE           0x0001000
-#define BL2_MSP_STACK_SIZE      0x0001000
+#define BL2_HEAP_SIZE           0x0000000
+#define BL2_MSP_STACK_SIZE      0x0000000
 
-#define S_HEAP_SIZE             0x0000200
+#define S_HEAP_SIZE             0x0001000
 #define S_MSP_STACK_SIZE_INIT   0x0000400
-#define S_MSP_STACK_SIZE        0x0000400
-#define S_PSP_STACK_SIZE        0x0000400
+#define S_MSP_STACK_SIZE        0x0000800
+#define S_PSP_STACK_SIZE        0x0000800
 
-#define NS_HEAP_SIZE            0x0000000
+#define NS_HEAP_SIZE            0x0001000
 #define NS_MSP_STACK_SIZE       0x0000400
-#define NS_PSP_STACK_SIZE       0x0000400
+#define NS_PSP_STACK_SIZE       0x0000C00
 
 
 /*

@@ -27,11 +27,12 @@ extern const struct memory_region_limits memory_regions;
 
 struct mpu_armv8m_dev_t dev_mpu_s = { MPU_BASE };
 
-void tfm_spm_hal_init_isolation_hw(void)
+enum tfm_plat_err_t tfm_spm_hal_init_isolation_hw(void)
 {
     /* Configures non-secure memory spaces in the target */
     sau_and_idau_cfg();
     SCU_Setup(); 
+    return TFM_PLAT_ERR_SUCCESS;
 }
 
 void tfm_spm_hal_configure_default_isolation(
@@ -337,15 +338,15 @@ enum spm_err_t tfm_spm_hal_set_share_region(
 #endif /* !defined(TFM_PSA_API) */
 #endif /* TFM_LVL != 1 */
 
-void tfm_spm_hal_setup_isolation_hw(void)
+enum tfm_plat_err_t tfm_spm_hal_setup_isolation_hw(void)
 {
 #if TFM_LVL != 1
     if (tfm_spm_mpu_init() != SPM_ERR_OK) {
         ERROR_MSG("Failed to set up initial MPU configuration! Halting.");
-        while (1) {
-            ;
+        return TFM_PLAT_ERR_SYSTEM_ERR;
         }
-    }
+    return TFM_PLAT_ERR_SUCCESS;
+
 #endif
 }
 #ifndef M2351
@@ -395,4 +396,71 @@ uint32_t tfm_spm_hal_get_ns_MSP(void)
 uint32_t tfm_spm_hal_get_ns_entry_point(void)
 {
     return *((uint32_t *)(memory_regions.non_secure_code_start+ 4));
+}
+
+enum tfm_plat_err_t tfm_spm_hal_set_secure_irq_priority(int32_t irq_line,
+                                                        uint32_t priority)
+{
+    uint32_t quantized_priority = priority >> (8U - __NVIC_PRIO_BITS);
+    NVIC_SetPriority(irq_line, quantized_priority);
+    return TFM_PLAT_ERR_SUCCESS;
+}
+
+void tfm_spm_hal_clear_pending_irq(int32_t irq_line)
+{
+    NVIC_ClearPendingIRQ(irq_line);
+}
+
+void tfm_spm_hal_enable_irq(int32_t irq_line)
+{
+    NVIC_EnableIRQ(irq_line);
+}
+
+void tfm_spm_hal_disable_irq(int32_t irq_line)
+{
+    NVIC_DisableIRQ(irq_line);
+}
+
+enum irq_target_state_t tfm_spm_hal_set_irq_target_state(
+                                           int32_t irq_line,
+                                           enum irq_target_state_t target_state)
+{
+    uint32_t result;
+
+    if (target_state == TFM_IRQ_TARGET_STATE_SECURE) {
+        result = NVIC_ClearTargetState(irq_line);
+    } else {
+        result = NVIC_SetTargetState(irq_line);
+    }
+
+    if (result) {
+        return TFM_IRQ_TARGET_STATE_NON_SECURE;
+    } else {
+        return TFM_IRQ_TARGET_STATE_SECURE;
+    }
+}
+
+enum tfm_plat_err_t tfm_spm_hal_enable_fault_handlers(void)
+{
+    return enable_fault_handlers();
+}
+
+enum tfm_plat_err_t tfm_spm_hal_system_reset_cfg(void)
+{
+    return system_reset_cfg();
+}
+
+enum tfm_plat_err_t tfm_spm_hal_init_debug(void)
+{
+    return init_debug();
+}
+
+enum tfm_plat_err_t tfm_spm_hal_nvic_interrupt_target_state_cfg(void)
+{
+    return nvic_interrupt_target_state_cfg();
+}
+
+enum tfm_plat_err_t tfm_spm_hal_nvic_interrupt_enable(void)
+{
+    return nvic_interrupt_enable();
 }

@@ -17,8 +17,8 @@ list(APPEND COMMON_COMPILE_FLAGS "-DM2351" "-DLOAD_ADDRESS=0x100000")
 
 #Specify the location of platform specific build dependencies.
 if(COMPILER STREQUAL "ARMCLANG")
+    set (S_SCATTER_FILE_NAME   "${PLATFORM_DIR}/target/Nuvoton/M2351/armclang/tfm_common_s.sct")
     set (BL2_SCATTER_FILE_NAME "${PLATFORM_DIR}/target/Nuvoton/M2351/armclang/nuvoton_m2351_bl2.sct")
-    set (S_SCATTER_FILE_NAME   "${PLATFORM_DIR}/target/Nuvoton/M2351/armclang/nuvoton_m2351_s.sct")
     set (NS_SCATTER_FILE_NAME  "${PLATFORM_DIR}/target/Nuvoton/M2351/armclang/nuvoton_m2351_ns.sct")
     if (DEFINED CMSIS_5_DIR)
       # not all project defines CMSIS_5_DIR, only the ones that use it.
@@ -26,8 +26,8 @@ if(COMPILER STREQUAL "ARMCLANG")
     endif()
     
 elseif(COMPILER STREQUAL "GNUARM")
+    set (S_SCATTER_FILE_NAME   "${PLATFORM_DIR}/common/gcc/tfm_common_s.ld")
     set (BL2_SCATTER_FILE_NAME "${PLATFORM_DIR}/target/Nuvoton/M2351/gcc/mps2_an519_bl2.ld")
-    set (S_SCATTER_FILE_NAME   "${PLATFORM_DIR}/target/Nuvoton/M2351/gcc/mps2_an519_s.ld")
     set (NS_SCATTER_FILE_NAME  "${PLATFORM_DIR}/target/Nuvoton/M2351/gcc/mps2_an519_ns.ld")
     if (DEFINED CMSIS_5_DIR)
       # not all project defines CMSIS_5_DIR, only the ones that use it.
