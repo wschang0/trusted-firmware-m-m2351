@@ -62,13 +62,13 @@
  * is used as a temporary storage during image swapping.
  */
 #define FLASH_AREA_BL2_OFFSET           (0x0)
-#define FLASH_AREA_BL2_SIZE             (0xC000)
+#define FLASH_AREA_BL2_SIZE             (0x8000)
 
-#define FLASH_AREA_IMAGE_0_OFFSET       (0x00C000)
+#define FLASH_AREA_IMAGE_0_OFFSET       (0x008000)
 #define FLASH_AREA_IMAGE_0_SIZE         (FLASH_PARTITION_SIZE)
 
-#define FLASH_AREA_IMAGE_1_OFFSET       (0x00C000)
-#define FLASH_AREA_IMAGE_1_SIZE         (0x00c000)
+#define FLASH_AREA_IMAGE_1_OFFSET       (0x008000)
+#define FLASH_AREA_IMAGE_1_SIZE         (0x008000)
 
 #define FLASH_AREA_IMAGE_SCRATCH_OFFSET (0x100000)
 #define FLASH_AREA_IMAGE_SCRATCH_SIZE    0x800
@@ -84,17 +84,16 @@
 #define FLASH_SST_AREA_SIZE             (0x4000)   /* 16 KB */
 
 /* Internal Trusted Storage (ITS) Service definitions */
-#define FLASH_ITS_AREA_OFFSET           (FLASH_SST_AREA_OFFSET + \
-                                         FLASH_SST_AREA_SIZE)
-#define FLASH_ITS_AREA_SIZE             (0x1000)   /* 4 KB */
+#define FLASH_ITS_AREA_OFFSET           (FLASH_SST_AREA_OFFSET + FLASH_SST_AREA_SIZE)
+#define FLASH_ITS_AREA_SIZE             (0x4000)   /* 16 KB */
 
 
-#define FLASH_NV_COUNTERS_AREA_OFFSET   (0x30000+FLASH_AREA_IMAGE_0_OFFSET)
-#define FLASH_NV_COUNTERS_AREA_SIZE     (0x10)     /* 2KB */
+#define FLASH_NV_COUNTERS_AREA_OFFSET   (FLASH_ITS_AREA_OFFSET + FLASH_ITS_AREA_SIZE)
+#define FLASH_NV_COUNTERS_AREA_SIZE     (0x10)
 
 /* Offset and size definition in flash area, used by assemble.py */
 #define SECURE_IMAGE_OFFSET             0x8000
-#define SECURE_IMAGE_MAX_SIZE           0x34000
+#define SECURE_IMAGE_MAX_SIZE           0x2C000
 
 #define NON_SECURE_IMAGE_OFFSET         0x40000
 #define NON_SECURE_IMAGE_MAX_SIZE       0x40000
@@ -140,7 +139,7 @@
 /* The sectors must be in consecutive memory location */
 #define ITS_NBR_OF_SECTORS      (FLASH_ITS_AREA_SIZE / ITS_SECTOR_SIZE)
 /* Specifies the smallest flash programmable unit in bytes */
-#define ITS_FLASH_PROGRAM_UNIT  (0x1)
+#define ITS_FLASH_PROGRAM_UNIT  (0x4)
 /* The maximum asset size to be stored in the ITS area */
 #define ITS_MAX_ASSET_SIZE      (512)
 /* The maximum number of assets to be stored in the ITS area */
