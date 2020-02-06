@@ -20,3 +20,4 @@ build*/
 !build_m2351
 *.scvd
 *.WSChang0
+CmakeSettings.json
