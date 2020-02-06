@@ -80,7 +80,7 @@
 #define BOOT_MAX_IMG_SECTORS            (32)
                                         
 
-#define FLASH_SST_AREA_OFFSET           (0x2C000+FLASH_AREA_IMAGE_0_OFFSET)
+#define FLASH_SST_AREA_OFFSET           (0x2C800+FLASH_AREA_IMAGE_0_OFFSET)
 #define FLASH_SST_AREA_SIZE             (0x4000)   /* 16 KB */
 
 /* Internal Trusted Storage (ITS) Service definitions */
@@ -93,7 +93,8 @@
 
 /* Offset and size definition in flash area, used by assemble.py */
 #define SECURE_IMAGE_OFFSET             0x8000
-#define SECURE_IMAGE_MAX_SIZE           0x2C000
+//#define SECURE_IMAGE_MAX_SIZE           0x2C800
+#define SECURE_IMAGE_MAX_SIZE           0x34000
 
 #define NON_SECURE_IMAGE_OFFSET         0x40000
 #define NON_SECURE_IMAGE_MAX_SIZE       0x40000
@@ -153,12 +154,5 @@
 /* FIXME: Use SRAM2 memory to store RW data */
 #define S_RAM_ALIAS_BASE  (0x20000000)
 #define NS_RAM_ALIAS_BASE (0x30000000)
-
-/* Shared data area between bootloader and runtime firmware.
- * Shared data area is allocated at the beginning of the RAM, it is overlapping
- * with TF-M Secure code's MSP stack
- */
-#define BOOT_TFM_SHARED_DATA_BASE 0x2000FC00//S_RAM_ALIAS_BASE
-#define BOOT_TFM_SHARED_DATA_SIZE 0x400
 
 #endif /* __FLASH_LAYOUT_H__ */
