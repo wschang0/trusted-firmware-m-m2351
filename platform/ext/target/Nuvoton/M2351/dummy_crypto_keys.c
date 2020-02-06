@@ -16,6 +16,7 @@
 
 #include "platform/include/tfm_plat_crypto_keys.h"
 #include <stddef.h>
+#include "NuMicro.h"
 
 /* FIXME: Functions in this file should be implemented by platform vendor. For
  * the security of the storage system, it is critical to use a hardware unique
@@ -28,9 +29,14 @@
 
 #define TFM_KEY_LEN_BYTES  16
 
-static const uint8_t sample_tfm_key[TFM_KEY_LEN_BYTES] =
-             {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, \
+__ALIGNED(4)
+static const uint8_t sample_tfm_key[TFM_KEY_LEN_BYTES] = 
+#if 1
+{ 0x8C, 0x7B, 0xFE, 0xD8, 0x86, 0x36, 0x15, 0x00, 0x43, 0x7A, 0x85, 0xBD, 0x66, 0x81, 0x08, 0x60 };
+#else
+			 {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, \
               0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
+#endif
 
 extern const enum ecc_curve_t initial_attestation_curve_type;
 extern const uint8_t  initial_attestation_private_key[];
@@ -39,6 +45,61 @@ extern const uint8_t  initial_attestation_public_x_key[];
 extern const uint32_t initial_attestation_public_x_key_size;
 extern const uint8_t  initial_attestation_public_y_key[];
 extern const uint32_t initial_attestation_public_y_key_size;
+
+
+/* SHA256 by hardware */
+int32_t SHAHash(uint32_t u32Mode, uint32_t *pu32Addr, int32_t size, uint32_t digest[])
+{
+	int32_t i;
+	int32_t n;
+
+	/* Enable CRYPTO */
+	CLK->AHBCLK |= CLK_AHBCLK_CRPTCKEN_Msk;
+
+	/* Init SHA */
+	CRPT->HMAC_CTL = (u32Mode << CRPT_HMAC_CTL_OPMODE_Pos) | CRPT_HMAC_CTL_INSWAP_Msk | CRPT_HMAC_CTL_OUTSWAP_Msk;
+	CRPT->HMAC_DMACNT = size;
+
+	/* Calculate SHA */
+	while (size > 0)
+	{
+		if (size <= 4)
+		{
+			CRPT->HMAC_CTL |= CRPT_HMAC_CTL_DMALAST_Msk;
+		}
+
+		/* Trigger to start SHA processing */
+		CRPT->HMAC_CTL |= CRPT_HMAC_CTL_START_Msk;
+
+		/* Waiting for SHA data input ready */
+		while ((CRPT->HMAC_STS & CRPT_HMAC_STS_DATINREQ_Msk) == 0);
+
+		/* Input new SHA date */
+		CRPT->HMAC_DATIN = *pu32Addr;
+		pu32Addr++;
+		size -= 4;
+	}
+
+	/* Waiting for calculation done */
+	while (CRPT->HMAC_STS & CRPT_HMAC_STS_BUSY_Msk);
+
+	/* return SHA results */
+	n = 0;
+	if (u32Mode == SHA_MODE_SHA1)
+		n = 5;
+	else if (u32Mode == SHA_MODE_SHA224)
+		n = 7;
+	else if (u32Mode == SHA_MODE_SHA256)
+		n = 8;
+	else if (u32Mode == SHA_MODE_SHA384)
+		n = 12;
+
+	for (i = 0; i < n; i++)
+		digest[i] = CRPT->HMAC_DGST[i];
+
+	return 0;
+}
+
 
 /**
  * \brief Copy the key to the destination buffer
@@ -60,10 +121,43 @@ static inline void copy_key(uint8_t *p_dst, const uint8_t *p_src, size_t size)
 
 enum tfm_plat_err_t tfm_plat_get_crypto_huk(uint8_t *key, uint32_t size)
 {
+	int32_t i;
+	uint32_t hash[8];
+	uint32_t otp[8];
+	uint32_t u32OtpNum;
+
     if(size > TFM_KEY_LEN_BYTES) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
+	
+	/* Calculate HUK key hash */
+	SHAHash(SHA_MODE_SHA256, (uint32_t *)sample_tfm_key, 16, hash);
 
+	/* Read key hash value from OTP */
+	FMC->ISPCTL |= FMC_ISPCTL_ISPEN_Msk;
+	i = 0;
+	for (u32OtpNum = 16;u32OtpNum < 20;u32OtpNum++)
+	{
+		FMC->ISPCMD = FMC_ISPCMD_READ_64;
+		FMC->ISPADDR = FMC_OTP_BASE + u32OtpNum * 8UL;
+		FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
+		while (FMC->ISPSTS & FMC_ISPSTS_ISPBUSY_Msk) {}
+		otp[i  ] = FMC->MPDAT0;
+		otp[i+1] = FMC->MPDAT1;
+		i+=2;
+	}
+
+	/* Check if the key hash matching */
+	for (i = 0;i < 8;i++)
+	{
+		if (otp[i] != hash[i])
+		{
+			/* HUK is not match key hash in OTP */
+			return TFM_PLAT_ERR_SYSTEM_ERR;
+		}
+	}
+
+	/* Return HUK */
     copy_key(key, sample_tfm_key, size);
 
     return TFM_PLAT_ERR_SUCCESS;
