@@ -27,7 +27,7 @@
                     0xB0, 0xB1, 0xB2, 0xB3, 0xB4, 0xB5, 0xB6, 0xB7, \
                     0xB8, 0xB9, 0xBA, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF
 
-//static const uint8_t boot_seed[BOOT_SEED_SIZE] = {BOOT_SEED};
+static uint8_t boot_seed[BOOT_SEED_SIZE] = {0};
 
 enum tfm_plat_err_t tfm_plat_get_boot_seed(uint32_t size, uint8_t *buf)
 {
@@ -43,27 +43,39 @@ enum tfm_plat_err_t tfm_plat_get_boot_seed(uint32_t size, uint8_t *buf)
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
 
-	/* Basic Configuration */
-	CLK->APBCLK0 |= CLK_APBCLK0_RTCCKEN_Msk;
-	CLK->APBCLK1 |= CLK_APBCLK1_TRNGCKEN_Msk;
-	RTC->LXTCTL |= RTC_LXTCTL_LIRC32KEN_Msk | RTC_LXTCTL_C32KS_Msk;
+    /* If the first bytes are 0, it must be un-initialized */
+    if((boot_seed[0]|boot_seed[1]) == 0)
+    {
+	    /* Basic Configuration */
+	    CLK->APBCLK0 |= CLK_APBCLK0_RTCCKEN_Msk;
+	    CLK->APBCLK1 |= CLK_APBCLK1_TRNGCKEN_Msk;
+	    RTC->LXTCTL |= RTC_LXTCTL_LIRC32KEN_Msk | RTC_LXTCTL_C32KS_Msk;
 
-	SYS->IPRST1 |= SYS_IPRST1_TRNGRST_Msk;
-	SYS->IPRST1 ^= SYS_IPRST1_TRNGRST_Msk;
+	    SYS->IPRST1 |= SYS_IPRST1_TRNGRST_Msk;
+	    SYS->IPRST1 ^= SYS_IPRST1_TRNGRST_Msk;
 
-	TRNG->ACT |= TRNG_ACT_ACT_Msk;
-	/* Waiting for ready */
-	while ((TRNG->CTL & TRNG_CTL_READY_Msk) == 0);
+	    TRNG->ACT |= TRNG_ACT_ACT_Msk;
+	    /* Waiting for ready */
+	    while ((TRNG->CTL & TRNG_CTL_READY_Msk) == 0);
 
-	TRNG->CTL = (9 << TRNG_CTL_CLKP_Pos);
+	    TRNG->CTL = (9 << TRNG_CTL_CLKP_Pos);
 
-	u32Reg = TRNG->CTL;
-	for (i = 0;i < size;i++)
-	{
-		TRNG->CTL = TRNG_CTL_TRNGEN_Msk | u32Reg;
-		while ((TRNG->CTL&TRNG_CTL_DVIF_Msk) == 0);
-		buf[i] = TRNG->DATA;
-	}
-
+	    u32Reg = TRNG->CTL;
+	    for (i = 0;i < size;i++)
+	    {
+		    TRNG->CTL = TRNG_CTL_TRNGEN_Msk | u32Reg;
+		    while ((TRNG->CTL&TRNG_CTL_DVIF_Msk) == 0);
+		    buf[i] = TRNG->DATA;
+            boot_seed[i] = buf[i];
+	    }
+    }
+    else
+    {
+        /* The seed has been initialed. Just return it. */
+        for(i = 0;i < size;i++)
+        {
+            buf[i] = boot_seed[i];
+        }
+    }
     return TFM_PLAT_ERR_SUCCESS;
 }
