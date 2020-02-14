@@ -22,6 +22,7 @@
 #include <limits.h>
 #include "Driver_Flash.h"
 #include "flash_layout.h"
+#include "NuMicro.h"
 
 /* Compilation time checks to be sure the defines are well defined */
 #ifndef TFM_NV_COUNTERS_AREA_ADDR
@@ -45,8 +46,9 @@
 #endif
 /* End of compilation time checks to be sure the defines are well defined */
 
+#define OTP_NUM_OFFSET   20
 #define SECTOR_OFFSET    0
-#define NV_COUNTER_SIZE  sizeof(uint32_t)
+#define NV_COUNTER_SIZE  sizeof(uint8_t)
 #define INIT_VALUE_SIZE  NV_COUNTER_SIZE
 #define NV_COUNTERS_AREA_OFFSET (TFM_NV_COUNTERS_AREA_ADDR - \
                                  TFM_NV_COUNTERS_SECTOR_ADDR)
@@ -56,75 +58,52 @@
 /* Import the CMSIS flash device driver */
 extern ARM_DRIVER_FLASH FLASH_DEV_NAME;
 
+
+uint8_t tfm_plat_otp_counter(enum tfm_nv_counter_t counter_id)
+{
+    uint32_t u32OtpNum;
+    uint32_t otp[2] = { 0 };
+    uint8_t i;
+
+    /* OTP 20 ~ PLAT_NV_COUNTER_MAX(5) is for nv counter. each has 0~64 count*/
+    u32OtpNum = OTP_NUM_OFFSET + (uint32_t)counter_id;
+    /* Read key hash value from OTP */
+    FMC->ISPCTL |= FMC_ISPCTL_ISPEN_Msk;
+    FMC->ISPCMD = FMC_ISPCMD_READ_64;
+    FMC->ISPADDR = FMC_OTP_BASE + u32OtpNum * 8UL;
+    FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
+    while(FMC->ISPSTS & FMC_ISPSTS_ISPBUSY_Msk) {}
+
+    otp[0] = FMC->MPDAT0;
+    otp[1] = FMC->MPDAT1;
+
+    /* Get zero count */
+    for(i = 0;i < 64;i++)
+    {
+        if(otp[i / 32] & (1 << i))
+            break;
+    }
+
+    return i;
+}
+
+
 enum tfm_plat_err_t tfm_plat_init_nv_counter(void)
 {
-    int32_t  err;
-    uint32_t i;
-    uint32_t nbr_counters = ((TFM_NV_COUNTERS_AREA_SIZE - INIT_VALUE_SIZE)
-                             / NV_COUNTER_SIZE);
-    uint32_t *p_nv_counter;
-    //uint8_t sector_data[TFM_NV_COUNTERS_SECTOR_SIZE] = {0};
-    uint8_t sector_data[FLASH_NV_COUNTERS_AREA_SIZE] = { 0 };
-
-    
-
-    /* Read the whole sector to be able to erase and write later in the flash */
-    //err = FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data,TFM_NV_COUNTERS_SECTOR_SIZE);
-    err = FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, FLASH_NV_COUNTERS_AREA_SIZE);
-
-    if (err != ARM_DRIVER_OK) {
-        return TFM_PLAT_ERR_SYSTEM_ERR;
-    }
-
-    /* Set the pointer to nv counters position */
-    p_nv_counter = (uint32_t *)(sector_data + NV_COUNTERS_AREA_OFFSET);
-
-    if (p_nv_counter[nbr_counters] == NV_COUNTERS_INITIALIZED) {
-        return TFM_PLAT_ERR_SUCCESS;
-    }
-
-    /* Add watermark, at the end of the NV counters area, to indicate that NV
-     * counters have been initialized.
-     */
-    p_nv_counter[nbr_counters] = NV_COUNTERS_INITIALIZED;
-
-    /* Initialize all counters to 0 */
-    for (i = 0; i < nbr_counters; i++) {
-        p_nv_counter[i] = 0;
-    }
-
-    /* Erase sector before write in it */
-    err = FLASH_DEV_NAME.EraseSector(TFM_NV_COUNTERS_SECTOR_ADDR);
-    if (err != ARM_DRIVER_OK) {
-        return TFM_PLAT_ERR_SYSTEM_ERR;
-    }
-
-    /* Write in flash the in-memory block content after modification */
-    //err = FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, TFM_NV_COUNTERS_SECTOR_SIZE);
-    err = FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, FLASH_NV_COUNTERS_AREA_SIZE);
-    if (err != ARM_DRIVER_OK) {
-        return TFM_PLAT_ERR_SYSTEM_ERR;
-    }
-
+    /* We use OTP as nv counter. So we don't need to init it */
     return TFM_PLAT_ERR_SUCCESS;
 }
 
 enum tfm_plat_err_t tfm_plat_read_nv_counter(enum tfm_nv_counter_t counter_id,
                                              uint32_t size, uint8_t *val)
 {
-    int32_t  err;
-    uint32_t flash_addr;
 
-    if (size != NV_COUNTER_SIZE) {
+    if(counter_id > PLAT_NV_COUNTER_MAX)
+    {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
 
-    flash_addr = TFM_NV_COUNTERS_AREA_ADDR + (counter_id * NV_COUNTER_SIZE);
-
-    err = FLASH_DEV_NAME.ReadData(flash_addr, val, NV_COUNTER_SIZE);
-    if (err != ARM_DRIVER_OK) {
-        return TFM_PLAT_ERR_SYSTEM_ERR;
-    }
+    *val = tfm_plat_otp_counter(counter_id);
 
     return TFM_PLAT_ERR_SUCCESS;
 }
@@ -132,42 +111,53 @@ enum tfm_plat_err_t tfm_plat_read_nv_counter(enum tfm_nv_counter_t counter_id,
 enum tfm_plat_err_t tfm_plat_set_nv_counter(enum tfm_nv_counter_t counter_id,
                                             uint32_t value)
 {
-    int32_t  err;
-    uint32_t *p_nv_counter;
-    //uint8_t  sector_data[TFM_NV_COUNTERS_SECTOR_SIZE];
-    uint8_t  sector_data[FLASH_NV_COUNTERS_AREA_SIZE];
+    uint32_t orgValue;
+    uint32_t otp[2] = { 0xfffffffful, 0xfffffffful };
+    int32_t i;
+    uint32_t u32OtpNum;
 
-    /* Read the whole sector to be able to erase and write later in the flash */
-    //err = FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, TFM_NV_COUNTERS_SECTOR_SIZE);
-    err = FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, FLASH_NV_COUNTERS_AREA_SIZE);
-    if (err != ARM_DRIVER_OK) {
+
+    if(counter_id > PLAT_NV_COUNTER_MAX)
+    {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
 
-    /* Set the pointer to nv counter position */
-    p_nv_counter = (uint32_t *)(sector_data + NV_COUNTERS_AREA_OFFSET +  (counter_id * NV_COUNTER_SIZE));
-
-    if (value != *p_nv_counter) {
-
-        if (value > *p_nv_counter) {
-            *p_nv_counter = value;
-        } else {
-            return TFM_PLAT_ERR_INVALID_INPUT;
-        }
-
-        /* Erase sector before write in it */
-        err = FLASH_DEV_NAME.EraseSector(TFM_NV_COUNTERS_SECTOR_ADDR);
-        if (err != ARM_DRIVER_OK) {
-            return TFM_PLAT_ERR_SYSTEM_ERR;
-        }
-
-        /* Write in flash the in-memory block content after modification */
-        //err = FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, TFM_NV_COUNTERS_SECTOR_SIZE);
-        err = FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_SECTOR_ADDR, sector_data, FLASH_NV_COUNTERS_AREA_SIZE);
-        if (err != ARM_DRIVER_OK) {
-            return TFM_PLAT_ERR_SYSTEM_ERR;
-        }
+    if(value > 64)
+    {
+        return TFM_PLAT_ERR_SYSTEM_ERR;
     }
+
+    orgValue = tfm_plat_otp_counter(counter_id);
+
+    if(value != orgValue)
+    {
+        if(value > orgValue)
+        {
+            /* Generate the value of otp */
+            for(i = 0;i < value;i++)
+            {
+                otp[i / 32] ^= (1ul << i);
+            }
+
+            u32OtpNum = OTP_NUM_OFFSET + (uint32_t)counter_id;
+            FMC->ISPCTL |= FMC_ISPCTL_ISPEN_Msk;
+            FMC->ISPCMD = FMC_ISPCMD_PROGRAM_64;
+            FMC->ISPADDR = FMC_OTP_BASE + u32OtpNum * 8UL;
+            FMC->MPDAT0 = otp[0];
+            FMC->MPDAT1 = otp[1];
+            FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
+            while(FMC->ISPSTS & FMC_ISPSTS_ISPBUSY_Msk) {}
+            
+            if(FMC->ISPSTS & FMC_ISPSTS_ISPFF_Msk)
+            {
+                FMC->ISPSTS |= FMC_ISPSTS_ISPFF_Msk;
+                return TFM_PLAT_ERR_SYSTEM_ERR;
+            }
+
+        }
+
+    }
+
 
     return TFM_PLAT_ERR_SUCCESS;
 }
@@ -185,7 +175,7 @@ enum tfm_plat_err_t tfm_plat_increment_nv_counter(
         return err;
     }
 
-    if (security_cnt == UINT32_MAX) {
+    if (security_cnt == 64) {
         return TFM_PLAT_ERR_MAX_VALUE;
     }
 
