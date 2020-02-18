@@ -18,24 +18,71 @@ static const char attestation_profile_definition[] = "psa-tfm-profile-1.md";
 enum tfm_security_lifecycle_t tfm_attest_hal_get_security_lifecycle(void)
 {
     uint32_t u32SCRLOCK, u32ARLOCK;
-    /* check the lock status */
+    uint32_t u32OtpNum;
+    uint32_t u32Otp[2];
+    uint32_t u32Rotpk0Lock;
+    
+    /* Eanble FMC */
     FMC->ISPCTL |= FMC_ISPCTL_ISPEN_Msk;
+
+    /* Check if ROTPK locked status */
+    rotpk = 0;
+    FMC->ISPCMD = FMC_ISPCMD_READ;
+    FMC->ISPADDR = FMC_OTP_BASE + 0x800;
+    FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
+    while(FMC->ISPSTS & FMC_ISPSTS_ISPBUSY_Msk) {}
+    u32Rotpk0Lock = FMC->ISPDAT;
+
+    /* Check the SCRLOCK status */
     FMC->ISPADDR = FMC_SCRLOCK_BASE;
     FMC->ISPCMD = FMC_ISPCMD_READ;
     FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
     while(FMC->ISPTRG){}
-    u32SCRLOCK = FMC->ISPDAT;
+    u32SCRLOCK = FMC->ISPDAT & 0xFFul;
+
+    /* Check the ARLOCK status */
     FMC->ISPADDR = FMC_ARLOCK_BASE;
     FMC->ISPCMD = FMC_ISPCMD_READ;
     FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
     while(FMC->ISPTRG) {}
-    u32ARLOCK = FMC->ISPDAT;
+    u32ARLOCK = FMC->ISPDAT & 0xFFul;
 
-    if(((FMC->ISPDAT&0xff) != 0x5a) || ((FMC->ISPDAT&0xff) != 0x5a))
-        return TFM_SLC_SECURED;
+    if(u32Rotpk0Lock == 0xfffffffful)
+    {
+        if((u32SCRLOCK == 0x5a) && (u32ARLOCK == 0x5a))
+        {
+            /* No ROTPK, No SCRLOCK, No ARLOCK */
+            return TFM_SLC_ASSEMBLY_AND_TEST;
+        }
+        else
+        {
+            /* No ROTPK but SCRLOCK or ARLOCK */
+            return TFM_SLC_UNKNOWN;
+        }
+    }
     else
-        return TFM_SLC_UNKNOWN;
-
+    {
+        if((u32SCRLOCK == 0x5a) && (u32ARLOCK == 0x5a))
+        {
+            /* ROTPK lock, no SCRLOCK and no ARLOCK */
+            return TFM_SLC_PSA_ROT_PROVISIONING;
+        }
+        else if((u32SCRLOCK != 0x5a) && (u32ARLOCK == 0x5a))
+        {
+            /* ROTPK lock, SCRLOCK, No ARLOCK*/
+            return TFM_SLC_NON_PSA_ROT_DEBUG;
+        }
+        else if(u32ARLOCK != 0x5a)
+        {
+            /* ROTPK lock, ARLOCK */
+            return TFM_SLC_SECURED;
+        }
+        else
+        {
+            /* Should not be here*/
+            return TFM_SLC_UNKNOWN;
+        }
+    }
 }
 
 const char *
