@@ -16,6 +16,8 @@
 
 #include "platform/include/tfm_plat_device_id.h"
 #include <stddef.h>
+#include "NuMicro.h"
+
 /*
  * NOTE: Functions in this file must be ported per target platform.
  */
@@ -23,14 +25,12 @@
 extern const uint8_t  initial_attestation_raw_public_key_hash[];
 extern const uint32_t initial_attestation_raw_public_key_hash_size;
 
-static const uint8_t implementation_id[] = {
-    0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
-    0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB,
-    0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC,
-    0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD, 0xDD,
-};
+/* 
+   Update the number from M2351 PSA Level 1 Certificate Number 
+   https://www.psacertified.org/products/numicro-m2351-series/
+*/
+static const uint8_t m2351_ean_13[] = "060456527292810010";
 
-static const uint8_t example_ean_13[] = "060456527282910010";
 /**
  * \brief Copy the device specific ID to the destination buffer
  *
@@ -79,23 +79,35 @@ enum tfm_plat_err_t tfm_plat_get_instance_id(uint32_t *size, uint8_t *buf)
 enum tfm_plat_err_t tfm_plat_get_implementation_id(uint32_t *size,
                                                    uint8_t  *buf)
 {
-    const uint8_t *p_impl_id = implementation_id;
-    uint32_t impl_id_size = sizeof(implementation_id);
+    int32_t i;
+    uint32_t u32ID[4];
 
-    if (*size < impl_id_size) {
+    if (*size < 16) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
 
-    copy_id(buf, p_impl_id, impl_id_size);
-    *size = impl_id_size;
+    /* The implment ID is UID (12 bytes) || PDID (4 bytes) */
+    FMC->ISPCTL |= FMC_ISPCTL_ISPEN_Msk;
+    FMC->ISPCMD = FMC_ISPCMD_READ_UID;
+    for(i = 0;i < 3;i++)
+    {
+        FMC->ISPADDR = i*4;
+        FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
+        while(FMC->ISPTRG) {}
+        u32ID[i] = FMC->ISPDAT;
+    }
+    u32ID[3] = SYS->PDID;
+
+    copy_id(buf, (uint8_t *)&u32ID[0], 16);
+    *size = 16;
 
     return TFM_PLAT_ERR_SUCCESS;
 }
 
 enum tfm_plat_err_t tfm_plat_get_hw_version(uint32_t *size, uint8_t *buf)
 {
-    const uint8_t *p_hw_version = example_ean_13;
-    uint32_t hw_version_size = sizeof(example_ean_13) - 1;
+    const uint8_t *p_hw_version = m2351_ean_13;
+    uint32_t hw_version_size = sizeof(m2351_ean_13) - 1;
 
     if (*size < hw_version_size) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
