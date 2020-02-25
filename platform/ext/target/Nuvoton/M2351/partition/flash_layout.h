@@ -155,4 +155,10 @@
 #define S_RAM_ALIAS_BASE  (0x20000000)
 #define NS_RAM_ALIAS_BASE (0x30000000)
 
+
+#define OTP_HUK_HASH_BASE   (16)
+#define OTP_IAK_HASH_BASE   (20)
+#define OTP_IID_HASH_BASE   (24)
+#define OTP_NV_COUNTER_BASE (32)
+
 #endif /* __FLASH_LAYOUT_H__ */

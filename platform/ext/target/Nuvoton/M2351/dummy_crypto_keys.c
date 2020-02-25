@@ -16,6 +16,7 @@
 
 #include "platform/include/tfm_plat_crypto_keys.h"
 #include <stddef.h>
+#include "flash_layout.h"
 #include "NuMicro.h"
 
 /* FIXME: Functions in this file should be implemented by platform vendor. For
@@ -31,12 +32,7 @@
 
 __ALIGNED(4)
 static const uint8_t sample_tfm_key[TFM_KEY_LEN_BYTES] = 
-#if 1
 { 0x8C, 0x7B, 0xFE, 0xD8, 0x86, 0x36, 0x15, 0x00, 0x43, 0x7A, 0x85, 0xBD, 0x66, 0x81, 0x08, 0x60 };
-#else
-			 {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, \
-              0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
-#endif
 
 extern const enum ecc_curve_t initial_attestation_curve_type;
 extern const uint8_t  initial_attestation_private_key[];
@@ -45,6 +41,26 @@ extern const uint8_t  initial_attestation_public_x_key[];
 extern const uint32_t initial_attestation_public_x_key_size;
 extern const uint8_t  initial_attestation_public_y_key[];
 extern const uint32_t initial_attestation_public_y_key_size;
+
+void ReadOtpHash(uint32_t u32StartOtpNum, uint32_t au32OtpHash[8])
+{
+    int32_t i;
+    uint32_t u32OtpNum;
+
+    /* Read key hash value from OTP */
+    FMC->ISPCTL |= FMC_ISPCTL_ISPEN_Msk;
+    i = 0;
+    for(u32OtpNum = u32StartOtpNum; u32OtpNum < u32StartOtpNum + 4; u32OtpNum++)
+    {
+        FMC->ISPCMD = FMC_ISPCMD_READ_64;
+        FMC->ISPADDR = FMC_OTP_BASE + u32OtpNum * 8UL;
+        FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
+        while(FMC->ISPSTS & FMC_ISPSTS_ISPBUSY_Msk) {}
+        au32OtpHash[i] = FMC->MPDAT0;
+        au32OtpHash[i + 1] = FMC->MPDAT1;
+        i += 2;
+    }
+}
 
 
 /* SHA256 by hardware */
@@ -124,7 +140,6 @@ enum tfm_plat_err_t tfm_plat_get_crypto_huk(uint8_t *key, uint32_t size)
 	int32_t i;
 	uint32_t hash[8];
 	uint32_t otp[8];
-	uint32_t u32OtpNum;
 
     if(size > TFM_KEY_LEN_BYTES) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
@@ -132,20 +147,9 @@ enum tfm_plat_err_t tfm_plat_get_crypto_huk(uint8_t *key, uint32_t size)
 	
 	/* Calculate HUK key hash */
 	SHAHash(SHA_MODE_SHA256, (uint32_t *)sample_tfm_key, 16, hash);
-
-	/* Read key hash value from OTP */
-	FMC->ISPCTL |= FMC_ISPCTL_ISPEN_Msk;
-	i = 0;
-	for (u32OtpNum = 16;u32OtpNum < 20;u32OtpNum++)
-	{
-		FMC->ISPCMD = FMC_ISPCMD_READ_64;
-		FMC->ISPADDR = FMC_OTP_BASE + u32OtpNum * 8UL;
-		FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
-		while (FMC->ISPSTS & FMC_ISPSTS_ISPBUSY_Msk) {}
-		otp[i  ] = FMC->MPDAT0;
-		otp[i+1] = FMC->MPDAT1;
-		i+=2;
-	}
+        
+    /* Read HUK hash from OTP */
+    ReadOtpHash(OTP_HUK_HASH_BASE, otp);
 
 	/* Check if the key hash matching */
 	for (i = 0;i < 8;i++)
@@ -175,6 +179,9 @@ tfm_plat_get_initial_attest_key(uint8_t          *key_buf,
     uint32_t full_key_size = initial_attestation_private_key_size  +
                              initial_attestation_public_x_key_size +
                              initial_attestation_public_y_key_size;
+    uint32_t au32OtpHash[8];
+    uint32_t au32Hash[8];
+    int32_t i;
 
     if (size < full_key_size) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
@@ -182,6 +189,22 @@ tfm_plat_get_initial_attest_key(uint8_t          *key_buf,
 
     /* Set the EC curve type which the key belongs to */
     *curve_type = initial_attestation_curve_type;
+
+    /* Calculate key hash */
+    SHAHash(SHA_MODE_SHA256, (uint32_t *)initial_attestation_private_key, 32, au32Hash);
+
+    /* Get IAK Hash from OTP */
+    ReadOtpHash(OTP_IAK_HASH_BASE, au32OtpHash);
+
+    /* Check the key hash with OTP */
+    for(i = 0; i < 8; i++)
+    {
+        if(au32OtpHash[i] != au32Hash[i])
+        {
+            return TFM_PLAT_ERR_SYSTEM_ERR;
+        }
+    }
+
 
     /* Copy the private key to the buffer, it MUST be present */
     key_dst  = key_buf;

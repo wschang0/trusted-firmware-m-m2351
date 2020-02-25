@@ -46,7 +46,7 @@
 #endif
 /* End of compilation time checks to be sure the defines are well defined */
 
-#define OTP_NUM_OFFSET   20
+#define OTP_NUM_OFFSET   OTP_NV_COUNTER_BASE
 #define SECTOR_OFFSET    0
 #define NV_COUNTER_SIZE  sizeof(uint8_t)
 #define INIT_VALUE_SIZE  NV_COUNTER_SIZE
@@ -65,7 +65,7 @@ uint8_t tfm_plat_otp_counter(enum tfm_nv_counter_t counter_id)
     uint32_t otp[2] = { 0 };
     uint8_t i;
 
-    /* OTP 20 ~ PLAT_NV_COUNTER_MAX(5) is for nv counter. each has 0~64 count*/
+    /* OTP OTP_NUM_OFFSET ~ PLAT_NV_COUNTER_MAX(5) is for nv counter. each has 0~64 count*/
     u32OtpNum = OTP_NUM_OFFSET + (uint32_t)counter_id;
     /* Read key hash value from OTP */
     FMC->ISPCTL |= FMC_ISPCTL_ISPEN_Msk;

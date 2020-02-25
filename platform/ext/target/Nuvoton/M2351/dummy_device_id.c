@@ -16,11 +16,16 @@
 
 #include "platform/include/tfm_plat_device_id.h"
 #include <stddef.h>
+#include "flash_layout.h"
 #include "NuMicro.h"
 
 /*
  * NOTE: Functions in this file must be ported per target platform.
  */
+
+
+extern void ReadOtpHash(uint32_t u32StartOtpNum, uint32_t au32OtpHash[8]);
+extern int32_t SHAHash(uint32_t u32Mode, uint32_t *pu32Addr, int32_t size, uint32_t digest[]);
 
 extern const uint8_t  initial_attestation_raw_public_key_hash[];
 extern const uint32_t initial_attestation_raw_public_key_hash_size;
@@ -60,9 +65,28 @@ enum tfm_plat_err_t tfm_plat_get_instance_id(uint32_t *size, uint8_t *buf)
 {
     uint8_t *p_dst;
     const uint8_t *p_src = initial_attestation_raw_public_key_hash;
+    uint32_t au32OtpHash[8];
+    uint32_t au32Hash[8];
+    int32_t i;
 
     if (*size < INSTANCE_ID_MAX_SIZE) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
+    }
+
+    /* Calculate HUK key hash */
+    SHAHash(SHA_MODE_SHA256, (uint32_t *)initial_attestation_raw_public_key_hash, 32, au32Hash);
+
+    /* Read HUK hash from OTP */
+    ReadOtpHash(OTP_IID_HASH_BASE, au32OtpHash);
+
+    /* Check if the key hash matching */
+    for(i = 0; i < 8; i++)
+    {
+        if(au32OtpHash[i] != au32Hash[i])
+        {
+            /* HUK is not match key hash in OTP */
+            return TFM_PLAT_ERR_SYSTEM_ERR;
+        }
     }
 
     buf[0] = 0x01; /* First byte is type byte:  0x01 indicates GUID */
