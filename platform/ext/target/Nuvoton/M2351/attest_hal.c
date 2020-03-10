@@ -18,15 +18,12 @@ static const char attestation_profile_definition[] = "psa-tfm-profile-1.md";
 enum tfm_security_lifecycle_t tfm_attest_hal_get_security_lifecycle(void)
 {
     uint32_t u32SCRLOCK, u32ARLOCK;
-    uint32_t u32OtpNum;
-    uint32_t u32Otp[2];
     uint32_t u32Rotpk0Lock;
     
     /* Eanble FMC */
     FMC->ISPCTL |= FMC_ISPCTL_ISPEN_Msk;
 
     /* Check if ROTPK locked status */
-    rotpk = 0;
     FMC->ISPCMD = FMC_ISPCMD_READ;
     FMC->ISPADDR = FMC_OTP_BASE + 0x800;
     FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
