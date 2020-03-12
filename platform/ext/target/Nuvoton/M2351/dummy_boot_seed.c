@@ -17,6 +17,7 @@
 #include "platform/include/tfm_plat_boot_seed.h"
 #include "NuMicro.h"
 
+
 /*!
  * \def BOOT_SEED
  *
@@ -77,5 +78,41 @@ enum tfm_plat_err_t tfm_plat_get_boot_seed(uint32_t size, uint8_t *buf)
             buf[i] = boot_seed[i];
         }
     }
+    
     return TFM_PLAT_ERR_SUCCESS;
+}
+
+int mbedtls_hardware_poll(void *data, unsigned char *output, size_t len, size_t *olen)
+{
+    uint32_t u32Reg;
+    int32_t i;
+
+    /* Init TRNG if it is not ready */
+    if((TRNG->ACT & TRNG_ACT_ACT_Msk) == 0 )
+    {
+        /* Basic Configuration */
+        CLK->APBCLK0 |= CLK_APBCLK0_RTCCKEN_Msk;
+        CLK->APBCLK1 |= CLK_APBCLK1_TRNGCKEN_Msk;
+        RTC->LXTCTL |= RTC_LXTCTL_LIRC32KEN_Msk | RTC_LXTCTL_C32KS_Msk;
+
+        SYS->IPRST1 |= SYS_IPRST1_TRNGRST_Msk;
+        SYS->IPRST1 ^= SYS_IPRST1_TRNGRST_Msk;
+
+        TRNG->ACT |= TRNG_ACT_ACT_Msk;
+        /* Waiting for ready */
+        while((TRNG->CTL & TRNG_CTL_READY_Msk) == 0);
+
+        TRNG->CTL = (9 << TRNG_CTL_CLKP_Pos);
+    }
+
+    u32Reg = TRNG->CTL;
+    for(i = 0; i < len; i++)
+    {
+        TRNG->CTL = TRNG_CTL_TRNGEN_Msk | u32Reg;
+        while((TRNG->CTL&TRNG_CTL_DVIF_Msk) == 0);
+        output[i] = TRNG->DATA;
+    }
+    *olen = len;
+
+    return 0;
 }
