@@ -14,10 +14,11 @@
 
 # Garbage files
 build*/
+vsbuild/
 *.orig
 **/__pycache__
 *.pyc
 !build_m2351
 *.scvd
 *.WSChang0
-CmakeSettings.json
+# CmakeSettings.json
