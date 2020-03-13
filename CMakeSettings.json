@@ -1,0 +1,98 @@
+﻿{
+    "configurations": [
+      {
+        "name": "M2351_TFM",
+        "generator": "Unix Makefiles",
+        "inheritEnvironments": [
+          "linux_arm"
+        ],
+        "configurationType": "Release",
+        //"generator": "Ninja",
+        //"cmakeExecutable": "C:\\Program Files\\CMake\\bin\\cmake.exe",
+        //"remoteMachineName": "${defaultRemoteMachineName}",
+        //"remoteCMakeListsRoot": "${projectDir}",
+        //"remoteBuildRoot": "${projectDir}\\vsbuild\\${name}",
+        //"remoteCopySources": true,
+        //"remoteCopySourcesOutputVerbosity": "Normal",
+        //"remoteCopySourcesConcurrentCopies": "10",
+        "buildRoot": "${projectDir}\\vsbuild",
+        "installRoot": "${projectDir}\\vsbuild\\vsinstall\\${name}",
+        //"cmakeCommandArgs": "-D CMAKE_MAKE_PROGRAM=c:\\cygwin64\\bin\\make.exe",
+        "cmakeCommandArgs": "",
+        "buildCommandArgs": "",
+        "ctestCommandArgs": "",
+        "intelliSenseMode": "linux-gcc-arm",
+        "environments": [
+          {
+            "INCLUDE": "${projectDir}\\..\\secure_fw\\services\\crypto;C:\\Keil_v5\\ARM\\ARMCLANG\\include;${projectDir}\\..\\CMSIS_5\\CMSIS\\Core\\Include;${projectDir}\\platform\\ext\\target\\Nuvoton\\M2351\\cmsis_core",
+          }
+        ],
+        "variables": [
+          {
+            "name": "CMAKE_MAKE_PROGRAM",
+            "value": "c:\\cygwin64\\bin\\make.exe"
+          },
+          {
+            "name": "CMAKE_C_FLAGS",
+            "value": "-IC:\\Keil_v5\\ARM\\ARMCLANG\\include -D__SOFTFP__=1"
+          },
+          {
+            "name": "TARGET_PLATFORM",
+            "value": "M2351"
+          },
+          {
+            "name": "PROJ_CONFIG",
+            "value": "${projectDir}/configs/ConfigRegressionIPCTfmLevel2.cmake"
+          },
+          {
+            "name": "COMPILER",
+            "value": "ARMCLANG"
+          },
+          {
+            "name": "CMAKE_BUILD_TYPE",
+            "value": "RELEASE"
+          },
+          {
+            "name": "ITS_RAM_FS",
+            "value": "OFF"
+          },
+          {
+            "name": "BL2",
+            "value": "False"
+          },
+          {
+            "name": "BUILD_PLAT_TEST",
+            "value": "False"
+          },
+          {
+            "name": "BUILD_DWARF_VERSION",
+            "value": "2"
+          },
+          {
+            "name": "MBEDTLS_DEBUG",
+            "value": "OFF"
+          },
+          {
+            "name": "ITS_CREATE_FLASH_LAYOUT",
+            "value": "1"
+          },
+          {
+            "name": "PSA_API_TEST_SECURE_STORAGE",
+            "value": "OFF"
+          },
+          {
+            "name": "PSA_API_TEST_CRYPTO",
+            "value": "OFF"
+          },
+          {
+            "name": "PSA_API_TEST_ATTESTATION",
+            "value": "ON"
+          },
+          {
+            "name": "ARMCLANG_PATH",
+            "value": "C:\\Keil_v5\\ARM\\ARMCLANG"
+          }
+        ]
+      }
+   ]
+}
