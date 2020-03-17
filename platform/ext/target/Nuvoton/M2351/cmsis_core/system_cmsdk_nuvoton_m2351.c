@@ -16,15 +16,8 @@
 
 #include "cmsis.h"
 
-/*
- * MPS2 AN519 has different frequencies for system core clock (20MHz) and
- * peripherals clock (25MHz).
- */
-#define  OSCCLK0          (40000000UL)
-#define  OSCCLK2          (25000000UL)
-
-#define  SYSTEM_CLOCK     (OSCCLK0/2)
-#define  PERIPHERAL_CLOCK (OSCCLK2)
+#define  SYSTEM_CLOCK     (64000000UL)
+#define  PERIPHERAL_CLOCK (64000000UL)
 
 #if defined (__VTOR_PRESENT) && (__VTOR_PRESENT == 1U)
   extern uint32_t __Vectors;
