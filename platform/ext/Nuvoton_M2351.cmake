@@ -13,6 +13,7 @@ include("Common/CpuM23")
 set(PLATFORM_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 list(APPEND COMMON_COMPILE_FLAGS "-DM2351" "-DLOAD_ADDRESS=0x100000")
+list(APPEND COMMON_COMPILE_FLAGS "-DMBEDTLS_CONFIG_FILE=\"platform/ext/common/tfm_mbedcrypto_config.h\"")
 
 
 #Specify the location of platform specific build dependencies.
@@ -158,7 +159,7 @@ elseif(BUILD_TARGET_NV_COUNTERS)
   set(TARGET_NV_COUNTERS_ENABLE ON)
   # Sets SST_ROLLBACK_PROTECTION flag to compile in the SST services
   # rollback protection code as the target supports nv counters.
-  set (SST_ROLLBACK_PROTECTION ON)
+  set (SST_ROLLBACK_PROTECTION OFF)
 endif()
 
 if (NOT DEFINED BUILD_CMSIS_DRIVERS)
