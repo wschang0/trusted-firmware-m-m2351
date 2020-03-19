@@ -139,25 +139,24 @@ enum tfm_plat_err_t tfm_plat_set_nv_counter(enum tfm_nv_counter_t counter_id,
                 otp[i / 32] ^= (1ul << i);
             }
 
-            u32OtpNum = OTP_NUM_OFFSET + (uint32_t)counter_id;
-            FMC->ISPCTL |= FMC_ISPCTL_ISPEN_Msk;
-            FMC->ISPCMD = FMC_ISPCMD_PROGRAM_64;
-            FMC->ISPADDR = FMC_OTP_BASE + u32OtpNum * 8UL;
-            FMC->MPDAT0 = otp[0];
-            FMC->MPDAT1 = otp[1];
-            FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
-            while(FMC->ISPSTS & FMC_ISPSTS_ISPBUSY_Msk) {}
-            
-            if(FMC->ISPSTS & FMC_ISPSTS_ISPFF_Msk)
+            for(i = 0; i < 2; i++)
             {
-                FMC->ISPSTS |= FMC_ISPSTS_ISPFF_Msk;
-                return TFM_PLAT_ERR_SYSTEM_ERR;
+                u32OtpNum = OTP_NUM_OFFSET + (uint32_t)counter_id;
+                FMC->ISPCTL |= FMC_ISPCTL_ISPEN_Msk;
+                FMC->ISPCMD = FMC_ISPCMD_PROGRAM;
+                FMC->ISPADDR = FMC_OTP_BASE + u32OtpNum * 8UL;
+                FMC->ISPDAT = otp[i];
+                FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;
+                while(FMC->ISPSTS & FMC_ISPSTS_ISPBUSY_Msk) {}
+
+                if(FMC->ISPSTS & FMC_ISPSTS_ISPFF_Msk)
+                {
+                    FMC->ISPSTS |= FMC_ISPSTS_ISPFF_Msk;
+                    return TFM_PLAT_ERR_SYSTEM_ERR;
+                }
             }
-
         }
-
     }
-
 
     return TFM_PLAT_ERR_SUCCESS;
 }
