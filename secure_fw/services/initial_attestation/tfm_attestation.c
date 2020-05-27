@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
-
+#include <string.h>
 #include "tfm_api.h"
 #include "tfm_secure_api.h"
 #include "attestation.h"
@@ -58,7 +58,7 @@ attest_get_boot_data(uint8_t major_type,
 {
     enum psa_attest_err_t attest_res = PSA_ATTEST_ERR_SUCCESS;
 
-#ifndef BL2
+#if (!defined(BL2) && !defined(M2351))
     /* Avoid compiler warning due to unused argument */
     (void)len;
     (void)major_type;
