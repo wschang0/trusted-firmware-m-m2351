@@ -184,6 +184,8 @@ elseif(BUILD_FLASH)
   # valid SST flash layout and it needs to create one.
   set(SST_CREATE_FLASH_LAYOUT ON)
   set(SST_RAM_FS OFF)
+  set(ITS_CREATE_FLASH_LAYOUT ON)
+  set(ITS_RAM_FS OFF)
   embedded_include_directories(PATH "${PLATFORM_DIR}/target/Nuvoton/M2351/cmsis_drivers" ABSOLUTE)
 endif()
 
