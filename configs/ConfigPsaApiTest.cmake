@@ -16,7 +16,7 @@ endif()
 if(NOT DEFINED TARGET_PLATFORM)
 	message(FATAL_ERROR "ERROR: TARGET_PLATFORM is not set in command line")
 elseif(${TARGET_PLATFORM} STREQUAL "M2351")
-	set (PLATFORM_CMAKE_FILE "${CMAKE_CURRENT_LIST_DIR}/platform/ext/Nuvoton_M2351.cmake")
+	set(PLATFORM_CMAKE_FILE "${TFM_ROOT_DIR}/platform/ext/Nuvoton_M2351.cmake")
 elseif(${TARGET_PLATFORM} STREQUAL "AN521")
 	set(PLATFORM_CMAKE_FILE "${TFM_ROOT_DIR}/platform/ext/Mps2AN521.cmake")
 elseif(${TARGET_PLATFORM} STREQUAL "AN519")
@@ -36,11 +36,11 @@ endif()
 #definitions) based on these.
 set (REGRESSION False)
 set (CORE_TEST False)
-set (CORE_IPC False)
+set (CORE_IPC true)
 set (PSA_API_TEST True)
 
 #TF-M isolation level: 1
-set (TFM_LVL 1)
+set (TFM_LVL 2)
 
 #Service specific configuration for the PSA API Compliance test requirements
 if(PSA_API_TEST_CRYPTO)
